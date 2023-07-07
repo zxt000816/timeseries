@@ -2,9 +2,9 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from informer.attention import ProbAttention
+from .attention import ProbAttention
 
-from informer.embed import DataEmbedding
+from .embed import DataEmbedding
 
 
 class ConvLayer(nn.Module):

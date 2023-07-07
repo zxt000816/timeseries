@@ -4,7 +4,6 @@ from torch import nn
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
 class FullAttention(nn.Module):
     def __init__(self, d_k, d_v, d_model, n_heads, dropout, mix=False):
         super(FullAttention, self).__init__()

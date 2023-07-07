@@ -84,20 +84,22 @@ def save_seq_label_pred(saved_seq_label_pred_path: str, **kwargs) -> Union[Dict[
     with open(saved_seq_label_pred_path, 'w') as f:
         json.dump(kwargs, f)
 
-def create_time_embedding(df: pd.DataFrame, freq: str) -> pd.DataFrame:
+def data_pipeline(df: pd.DataFrame, freq: str) -> pd.DataFrame:
     df['date'] = pd.to_datetime(df['date'])
     df.sort_values(by=['date'], inplace=True)
     df['price'] = df['price'].astype(float)
     df = df[['date', 'price']]
-    
+
     if freq != 'Y':
         df = resample_price(df, freq)
 
+    return df
+
+def create_time_embedding(df: pd.DataFrame) -> pd.DataFrame:
     df['day_of_week'] = df["date"].apply(lambda row: row.weekday() / 4 - 0.5, 1)
     df['day_of_month'] = df["date"].apply(lambda row: (row.day - 1) / 30 - 0.5, 1)
     df['month_of_year'] = df["date"].apply(lambda row: (row.month - 1) / 11 - 0.5, 1)
     df['day_of_year'] = df["date"].apply(lambda row: (row.dayofyear - 1) / 365 - 0.5, 1)
-
     return df
 
 def load_most_frequently_data(df: pd.DataFrame) -> pd.DataFrame:

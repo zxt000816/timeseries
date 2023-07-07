@@ -1,10 +1,9 @@
 import torch.nn.functional as F
 from torch import nn
 
-from informer.attention import ProbAttention, FullAttention
-
-from informer.embed import DataEmbedding
-from timeseries.mask import get_attn_subsequence_mask
+from .attention import ProbAttention, FullAttention
+from .embed import DataEmbedding
+from .mask import get_attn_subsequence_mask
 
 
 class DecoderLayer(nn.Module):

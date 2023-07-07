@@ -3,7 +3,6 @@ import torch
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
 def get_attn_subsequence_mask(seq):
     """
     seq: [batch_size, tgt_len]

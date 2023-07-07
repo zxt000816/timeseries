@@ -1,7 +1,7 @@
 from torch import nn
 
-from informer.decoder import Decoder
-from informer.encoder import Encoder
+from .decoder import Decoder
+from .encoder import Encoder
 
 from typing import List, Dict, Tuple, Union, Any, Optional
 import pandas as pd

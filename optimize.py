@@ -1,4 +1,4 @@
-from informer.model import Informer
+from .informer.model import Informer
 import torch, json, os, optuna
 import torch.nn as nn
 from torch.utils.data import DataLoader
