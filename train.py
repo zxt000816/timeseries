@@ -1,17 +1,22 @@
 import numpy as np
 from tqdm import tqdm
 import torch
+from torch.utils.data import DataLoader
+from torch import nn
 from termcolor import colored
+from typing import List, Dict, Tuple, Union, Any, Optional
 
 def train_informer(
-    train_loader, 
-    pred_len,
-    label_len,
-    model, 
-    optimizer, 
-    critertion, 
-    device,
-):
+    train_loader: DataLoader,
+    pred_len: int,
+    label_len: int,
+    model: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    critertion: nn.Module,
+    target: str,
+    column_idxes: Dict[str, int], 
+    device: torch.device,
+) -> float:
     model.train()
     losses = []
 
@@ -27,9 +32,10 @@ def train_informer(
         dec_inp = torch.zeros(batch_y.shape[0], pred_len, batch_y.shape[-1]).float()
         dec_inp = torch.cat([batch_y[:, -label_len:, :], dec_inp], dim=1).to(device)
 
-        pred = model(batch_X, batch_X_stamp, dec_inp, batch_y_stamp)
-        pred = pred[:, -pred_len:, :].to(device)
-        true = batch_y[:, -pred_len:, :].to(device)
+        pred = model(batch_X, batch_X_stamp, dec_inp, batch_y_stamp).to(device)
+        # true = batch_y.to(device)
+        pred = pred[:, -pred_len:, [column_idxes[target]]].to(device)
+        true = batch_y[:, -pred_len:, [column_idxes[target]]].to(device)
 
         loss = critertion(pred, true)
         losses.append(loss.item())
@@ -41,6 +47,5 @@ def train_informer(
         optimizer.step()
     
     mean_loss = np.mean(losses)
-    
     
     return mean_loss

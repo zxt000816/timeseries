@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
+from torch import nn
 from datetime import datetime
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 from typing import List, Dict, Tuple, Union, Any, Optional
 import matplotlib.pyplot as plt
+from timeseries.dataset import InformerDataset
 
 def save_prediction_performance(
         prediction_result_eval_path: str, 
@@ -48,17 +51,20 @@ def error_report(real: Union[List, np.ndarray], pred: Union[List, np.ndarray]) -
     return error_rate, rmse, mape, shreshold
 
 def eval_informer(
-    test_dataset,
-    test_loader, 
-    pred_len,
-    label_len,
-    model, 
-    device,
-):
+    test_dataset: InformerDataset,
+    test_loader: DataLoader, 
+    pred_len: int,
+    label_len: int,
+    model: nn.Module, 
+    target: str,
+    column_idxes: Dict[str, int], 
+    device: torch.device,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     model.eval()
     preds = np.array([])
     trues = np.array([])
     cnt = 0
+    target_idx = column_idxes[target]
     # X -> Input, y -> Output
     for (batch_X, batch_y, batch_X_stamp, batch_y_stamp, x_x_axis, y_x_axis) in test_loader:
         batch_X = batch_X.float().to(device)
@@ -70,9 +76,12 @@ def eval_informer(
         dec_inp = torch.cat([batch_y[:, -label_len:, :], dec_inp], dim=1).to(device)
 
         pred = model(batch_X, batch_X_stamp, dec_inp, batch_y_stamp)
-        pred = pred[:, -pred_len:, :].to(device)
-        true = batch_y[:, -pred_len:, :].to(device)
+        pred = pred[:, -pred_len:, [target_idx]].to(device)
+        true = batch_y[:, -pred_len:, [target_idx]].to(device)
         temp_x_axis = np.squeeze(test_dataset.time_idx[y_x_axis][:, -pred_len:, :], axis=2)
+
+        # pred = pred[:, -pred_len:, :].to(device)
+        # true = batch_y[:, -pred_len:, :].to(device)
         
         preds = np.append(preds, pred.cpu().detach().numpy()[::pred_len])
         trues = np.append(trues, true.cpu().detach().numpy()[::pred_len])
@@ -105,7 +114,7 @@ def informer_forecasting(
     pred_len: int, 
     pred_dates: pd.Series, 
     device: torch.device, 
-    date_type: str = 'str'
+    date_type: str = 'str',
 ) -> Tuple[List[Union[pd.Timestamp, str]], np.ndarray]:
     model.eval()
     target = 'price'

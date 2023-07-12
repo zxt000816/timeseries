@@ -7,7 +7,17 @@ import numpy as np
 from termcolor import colored
 from typing import List, Dict, Tuple, Union, Any, Optional
 
-def optimize_informer(trial, input_vars, time_vars, loader, pred_len, label_len, device):
+def optimize_informer(
+    trial: optuna.Trial,
+    input_vars: List[str],
+    time_vars: List[str],
+    loader: DataLoader,
+    pred_len: int,
+    label_len: int,
+    target: str,
+    column_idxes: Dict[str, int],
+    device: torch.device
+):
     d_k = trial.suggest_categorical('d_k', [8, 16, 32])
     d_v = d_k
     n_heads = trial.suggest_categorical('n_heads', [1, 2, 4, 8])
@@ -48,8 +58,8 @@ def optimize_informer(trial, input_vars, time_vars, loader, pred_len, label_len,
             dec_inp = torch.cat([batch_y[:, -label_len:, :], dec_inp], dim=1).to(device)
 
             pred = model(batch_X, batch_X_stamp, dec_inp, batch_y_stamp)
-            pred = pred[:, -pred_len:, :].to(device)
-            true = batch_y[:, -pred_len:, :].to(device)
+            pred = pred[:, -pred_len:, column_idxes[target]].to(device)
+            true = batch_y[:, -pred_len:, column_idxes[target]].to(device)
 
             loss = critertion(pred, true)
             losses.append(loss.item())
@@ -59,7 +69,18 @@ def optimize_informer(trial, input_vars, time_vars, loader, pred_len, label_len,
             
     return np.mean(losses)
 
-def optimize_hyperparameters(num_of_trials: int, input_vars: List[str], time_vars: List[str], temp_loader: DataLoader, pred_len: int, label_len: int, device: torch.device, best_params_path: str) -> Dict[str, Any]:
+def optimize_hyperparameters(
+        num_of_trials: int, 
+        input_vars: List[str], 
+        time_vars: List[str], 
+        temp_loader: DataLoader, 
+        pred_len: int, 
+        label_len: int, 
+        target: str,
+        column_idxes: Dict[str, int],
+        device: torch.device, 
+        best_params_path: str
+) -> Dict[str, Any]:
     if os.path.exists(best_params_path):
         print(colored(f'Loading best params from: {best_params_path}', 'green'))
         with open(best_params_path, 'r') as f:
@@ -68,7 +89,7 @@ def optimize_hyperparameters(num_of_trials: int, input_vars: List[str], time_var
         print(colored(f'Optimizing hyperparameters for {num_of_trials} trials...', 'yellow'))
         study = optuna.create_study(direction='minimize')
         def objective(trial):
-            train_loss = optimize_informer(trial, input_vars, time_vars, temp_loader, pred_len, label_len, device)
+            train_loss = optimize_informer(trial, input_vars, time_vars, temp_loader, pred_len, label_len, target, column_idxes, device)
             return train_loss
         study.optimize(objective, n_trials=num_of_trials)
         best_params = study.best_params
