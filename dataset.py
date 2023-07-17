@@ -95,13 +95,6 @@ def data_pipeline(df: pd.DataFrame, freq: str) -> pd.DataFrame:
 
     return df
 
-def create_time_embedding(df: pd.DataFrame) -> pd.DataFrame:
-    df['day_of_week'] = df["date"].apply(lambda row: row.weekday() / 4 - 0.5, 1)
-    df['day_of_month'] = df["date"].apply(lambda row: (row.day - 1) / 30 - 0.5, 1)
-    df['month_of_year'] = df["date"].apply(lambda row: (row.month - 1) / 11 - 0.5, 1)
-    df['day_of_year'] = df["date"].apply(lambda row: (row.dayofyear - 1) / 365 - 0.5, 1)
-    return df
-
 def load_most_frequently_data(df: pd.DataFrame) -> pd.DataFrame:
     sorted_grade_ls = df['grade'].value_counts().index.tolist()
     if len(sorted_grade_ls) == 0:
@@ -115,8 +108,15 @@ def load_most_frequently_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df[df['unit'] == sorted_unit_ls[0]]
     return df
 
-def load_data(_tuple: tuple, data_root: str='./data') -> Union[Dict[str, Any], None]:
-    _, item_code_name, item_code, kind_code_name, kind_code, child_code_name, child_code, _ = _tuple
+def load_data(row: pd.Series, data_root: str='./data') -> Union[Dict[str, Any], None]:
+    item_code_name = row.get('item_code_name')
+    item_code = row.get('item_code')
+    kind_code_name = row.get('kind_code_name')
+    kind_code = row.get('kind_code')
+    child_code_name = row.get('child_code_name')
+    child_code = row.get('child_code')
+
+
     item_code_name: str = item_code_name.replace(' ', '_')
     kind_code_name: str = kind_code_name.replace(' ', '_')
     child_code_name: str = child_code_name.replace(' ', '_')
