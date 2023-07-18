@@ -38,7 +38,7 @@ def count_weekdays(year: int):
                 count += 1
     return count
 
-def normalize_data(df: pd.DataFrame, mean: pd.Series = None, std: pd.Series = None, numeric_columns: List = []) -> Tuple[pd.DataFrame, float, float]:
+def normalize_data(df: pd.DataFrame, mean: float = None, std: float = None, numeric_columns: List = []) -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
     if len(numeric_columns) == 0:
         numeric_columns = df.select_dtypes(include=[np.number]).columns
     
