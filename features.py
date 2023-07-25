@@ -6,7 +6,20 @@ from tsfresh.utilities.dataframe_functions import roll_time_series
 from tsfresh.utilities.dataframe_functions import impute
 from tsfresh.feature_extraction import MinimalFCParameters, EfficientFCParameters, ComprehensiveFCParameters
 from typing import List, Dict, Tuple, Union, Any, Optional
+from statsmodels.tsa.seasonal import STL
 
+def create_stl_features(df: pd.DataFrame, period: int) -> pd.DataFrame:
+    df['date'] = pd.to_datetime(df['date'])
+    df.set_index('date', inplace=True)
+    
+    stl = STL(df['price'], period=period)
+    result = stl.fit()
+    
+    df['trend'] = result.trend
+    df['seasonal'] = result.seasonal
+    df['resid'] = result.resid
+    return df.reset_index()
+    
 def create_time_embedding(df: pd.DataFrame) -> pd.DataFrame:
     df['day_of_week'] = df["date"].apply(lambda row: row.weekday() / 4 - 0.5, 1)
     df['day_of_month'] = df["date"].apply(lambda row: (row.day - 1) / 30 - 0.5, 1)

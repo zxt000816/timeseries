@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from termcolor import colored
 from datetime import datetime
-from statsmodels.tsa.seasonal import STL
 from typing import List, Dict, Tuple, Union, Any, Optional
 import os
 
@@ -13,18 +12,6 @@ def determine_period(freq: str) -> int:
         return 52
     elif freq == 'M':
         return 12
-
-def create_stl_features(df: pd.DataFrame, period: int) -> pd.DataFrame:
-    df['date'] = pd.to_datetime(df['date'])
-    df.set_index('date', inplace=True)
-    
-    stl = STL(df['price'], period=period)
-    result = stl.fit()
-    
-    df['trend'] = result.trend
-    df['seasonal'] = result.seasonal
-    df['resid'] = result.resid
-    return df.reset_index()
 
 def count_weekdays(year: int):
     count = 0
