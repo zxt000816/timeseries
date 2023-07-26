@@ -84,7 +84,30 @@ def save_seq_label_pred(saved_seq_label_pred_path: str, **kwargs) -> Union[Dict[
     with open(saved_seq_label_pred_path, 'w') as f:
         json.dump(kwargs, f)
 
-def data_pipeline(df: pd.DataFrame, freq: str) -> pd.DataFrame:
+def removeOutlier(df: pd.DataFrame, target_col: str, upper: float = 0.75, lower: float = 0.25) -> pd.DataFrame:
+    Q1 = df[target_col].quantile(lower)
+    Q3 = df[target_col].quantile(upper)
+    IQR = Q3 - Q1
+    df = df[~((df[target_col] < (Q1 - 1.5 * IQR)) | (df[target_col] > (Q3 + 1.5 * IQR)))]
+    return df
+
+def smoothingTimeSeries(df: pd.DataFrame, target_col: str, alpha: float = 0.1) -> pd.DataFrame:
+    df[target_col] = df[target_col].ewm(alpha=alpha).mean()
+    return df
+
+def preprocessTimeSeries(df: pd.DataFrame, target_cols: List[str], remove_outlier: bool = True, smoothing: bool = True, **kwargs) -> pd.DataFrame:
+    if remove_outlier:
+        upper = kwargs['upper'] if 'upper' in kwargs.keys() else 0.75
+        lower = kwargs['lower'] if 'lower' in kwargs.keys() else 0.25
+        for col in target_cols:
+            df = removeOutlier(df, col, upper, lower)
+    if smoothing:
+        alpha = kwargs['alpha'] if 'alpha' in kwargs.keys() else 0.1
+        for col in target_cols:
+            df = smoothingTimeSeries(df, col, alpha)
+    return df
+
+def data_pipeline(df: pd.DataFrame, freq: str, preprocess: bool = False, **kwargs) -> pd.DataFrame:
     df['date'] = pd.to_datetime(df['date'])
     df.sort_values(by=['date'], inplace=True)
     df['price'] = df['price'].astype(float)
@@ -92,6 +115,12 @@ def data_pipeline(df: pd.DataFrame, freq: str) -> pd.DataFrame:
 
     if freq != 'Y':
         df = resample_price(df, freq)
+    
+    if preprocess:
+        preprocess_cols = kwargs['target_cols'] if 'target_cols' in kwargs.keys() else ['price']
+        remove_outlier = kwargs['remove_outlier'] if 'remove_outlier' in kwargs.keys() else True
+        smoothing = kwargs['smoothing'] if 'smoothing' in kwargs.keys() else True
+        df = preprocessTimeSeries(df, preprocess_cols, remove_outlier, smoothing, **kwargs)
 
     return df
 
