@@ -180,11 +180,12 @@ def save_plot_img(
 ) -> None:
     plt.figure(figsize=(18, 6))
     if len(x_axis) > 0: 
-        plt.plot(x_axis, pred, label="predict")
         plt.plot(x_axis, real, label="real")
+        plt.plot(x_axis, pred, label="predict")
     else:
-        plt.plot(pred, label="predict")
         plt.plot(real, label="real")
+        plt.plot(pred, label="predict")
+        
     
     plt.xticks(rotation=90)
     plt.legend()
