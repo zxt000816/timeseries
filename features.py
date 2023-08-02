@@ -20,11 +20,25 @@ def create_stl_features(df: pd.DataFrame, period: int) -> pd.DataFrame:
     df['resid'] = result.resid
     return df.reset_index()
     
-def create_time_embedding(df: pd.DataFrame) -> pd.DataFrame:
-    df['day_of_week'] = df["date"].apply(lambda row: row.weekday() / 4 - 0.5, 1)
-    df['day_of_month'] = df["date"].apply(lambda row: (row.day - 1) / 30 - 0.5, 1)
-    df['month_of_year'] = df["date"].apply(lambda row: (row.month - 1) / 11 - 0.5, 1)
-    df['day_of_year'] = df["date"].apply(lambda row: (row.dayofyear - 1) / 365 - 0.5, 1)
+# def create_time_embedding(df: pd.DataFrame) -> pd.DataFrame:
+#     df['day_of_week'] = df["date"].apply(lambda row: row.weekday() / 4 - 0.5, 1)
+#     df['day_of_month'] = df["date"].apply(lambda row: (row.day - 1) / 30 - 0.5, 1)
+#     df['month_of_year'] = df["date"].apply(lambda row: (row.month - 1) / 11 - 0.5, 1)
+#     df['day_of_year'] = df["date"].apply(lambda row: (row.dayofyear - 1) / 365 - 0.5, 1)
+#     return df
+
+def create_time_embedding(df: pd.DataFrame, features: List[str]) -> pd.DataFrame:
+    feature_funcs = {
+        'day_of_week': lambda row: row.weekday() / 4 - 0.5,
+        'day_of_month': lambda row: (row.day - 1) / 30 - 0.5,
+        'month_of_year': lambda row: (row.month - 1) / 11 - 0.5,
+        'day_of_year': lambda row: (row.dayofyear - 1) / 365 - 0.5
+    }
+
+    for feature in features:
+        if feature in feature_funcs:
+            df[feature] = df["date"].apply(feature_funcs[feature], 1)
+
     return df
 
 def feature_engineering(df: pd.DataFrame, freq: str, mode: str ='min') -> pd.DataFrame:

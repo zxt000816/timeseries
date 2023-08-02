@@ -3,7 +3,17 @@ import pandas as pd
 from termcolor import colored
 from datetime import datetime
 from typing import List, Dict, Tuple, Union, Any, Optional
-import os
+import os, random, torch
+from pandas.tseries.offsets import BDay
+
+def seed_everything(seed: int = 42):
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)  # type: ignore
+    torch.backends.cudnn.deterministic = True  # type: ignore
+    torch.backends.cudnn.benchmark = True  # type: ignore
 
 def determine_period(freq: str) -> int:
     if freq == 'D':
@@ -36,6 +46,24 @@ def normalize_data(df: pd.DataFrame, mean: float = None, std: float = None, nume
     df[numeric_columns] = (df[numeric_columns] - mean) / std
     
     return df, mean, std
+
+def extend_dataframe(df, extend_length):
+    # Get the last date in df_to_predict
+    last_date = df['date'].iloc[-1]
+
+    # Create new dates starting from the day after the last date, excluding weekends
+    new_dates = pd.date_range(start=last_date + BDay(1), periods=extend_length, freq=BDay())
+
+    # Create a new dataframe with the new dates and fill the 'price' column with 0
+    new_df = pd.DataFrame({'date': new_dates})
+
+    # Append the new data to df_to_predict
+    df = pd.concat([df, new_df], ignore_index=True)
+
+    # Fill any other missing values with 0
+    df = df.fillna(0)
+
+    return df
 
 # covert list to dict, key is the index of the list, value is the element of the list
 def list2dict(l: List) -> Dict:

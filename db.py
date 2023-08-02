@@ -28,7 +28,8 @@ class MYSQL_DB_API:
         self.connection.close()
     
     def load_data(self, query):
-        data = pd.read_sql_query(query, self.engine)
+        with self.engine.begin() as conn:
+            data = pd.read_sql_query(sql=sql_text(query), con=conn)
         return data
 
     def count_data(self, query):
