@@ -55,10 +55,8 @@ class timeSeriesDataModule(pl.LightningDataModule):
                 else:
                     self.df_test = pd.concat([self.df_train.iloc[-offset:], self.df_test])
 
-            if self.val:
-                self.val_dataset = self.dataset(self.df_val, **self.dataset_args)
-
             self.train_dataset = self.dataset(self.df_train, **self.dataset_args)
+            self.val_dataset = self.dataset(self.df_val, **self.dataset_args) if self.val else None
             self.test_dataset = self.dataset(self.df_test, **self.dataset_args)
             
         if stage == 'predict':
