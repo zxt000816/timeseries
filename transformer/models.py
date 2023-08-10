@@ -163,7 +163,7 @@ class InformerPL(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx):
         preds, trues = self.process_batch(batch)
-        return preds[::self.pred_len], trues[::self.pred_len]
+        return preds, trues
     
 class Seq2Seq(pl.LightningModule):
     def __init__(

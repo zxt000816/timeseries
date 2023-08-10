@@ -73,13 +73,14 @@ def list2dict(l: List) -> Dict:
     return d
 
 def resample_price(dataframe: pd.DataFrame, freq: str) -> pd.DataFrame:
-    dataframe['date'] = pd.to_datetime(dataframe['date'])
+    df = dataframe.copy()
+    df['date'] = pd.to_datetime(df['date'])
 
-    dataframe.set_index('date', inplace=True)
-    dataframe_resampled = dataframe['price'].resample(freq).mean()
-    dataframe_resampled = dataframe_resampled.reset_index().dropna()
+    df.set_index('date', inplace=True)
+    df_resampled = df['price'].resample(freq).mean()
+    df_resampled = df_resampled.reset_index().dropna()
 
-    return dataframe_resampled
+    return df_resampled
 
 def create_folder(*args: List[str]) -> None:
     for arg in args:
