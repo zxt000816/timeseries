@@ -62,6 +62,7 @@ def extend_dataframe(df, extend_length):
 
     # Fill any other missing values with 0
     df = df.fillna(0)
+    df.index = range(len(df))
 
     return df
 
