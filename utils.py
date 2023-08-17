@@ -80,6 +80,7 @@ def resample_price(dataframe: pd.DataFrame, freq: str) -> pd.DataFrame:
     df.set_index('date', inplace=True)
     df_resampled = df['price'].resample(freq).mean()
     df_resampled = df_resampled.reset_index().dropna()
+    df_resampled.index = range(len(df_resampled))
 
     return df_resampled
 
