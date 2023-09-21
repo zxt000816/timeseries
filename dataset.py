@@ -1,3 +1,4 @@
+import torch
 from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
 import numpy as np
@@ -9,128 +10,18 @@ from typing import List, Dict, Tuple, Union, Any, Optional
 from .utils import resample_price
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-class timeSeriesFullDataModule(pl.LightningDataModule):
+class LSTMDataset(Dataset):
     def __init__(
-        self, 
-        df: pd.DataFrame,
-        dataset: Dataset,
-        df_predict: Optional[pd.DataFrame] = None,
-        split_ratio: List = [0.7, 0.2, 0.1], 
-        batch_size: int = 32,
-        scale_mode: str = "standard",
-        **dataset_args
+        self, data, seq_len
     ):
-        super().__init__()
-        self.df = df
-        self.dataset = dataset
-        self.df_predict = df_predict
-        self.split_ratio = split_ratio
-        self.dataset_args = dataset_args
-        self.scale_mode = scale_mode
-        self.data_loader_args = {
-            "batch_size": batch_size,
-            "num_workers": os.cpu_count(),
-            "pin_memory": True
-        }
+        self.seq_len = seq_len
+        self.data = torch.tensor(data, dtype=torch.float32)
     
-    def setup(self, stage: str):
-        if stage == 'fit' or stage == 'test' or stage is None:
-            self.df_train, self.df_val, self.df_test = split_data(self.df.copy(), mode="ratio", val=True, value=self.split_ratio)
+    def __getitem__(self, index):
+        return self.data[index: index + self.seq_len], self.data[index + self.seq_len]
 
-            input_vars = self.dataset_args["input_vars"]
-            self.scaler = StandardScaler() if self.scale_mode == "standard" else MinMaxScaler()
-            self.scaler.fit(self.df_train[input_vars])
-            self.df_train[input_vars] = self.scaler.transform(self.df_train[input_vars])
-            if self.val:
-                self.df_val[input_vars] = self.scaler.transform(self.df_val[input_vars])
-            self.df_test[input_vars] = self.scaler.transform(self.df_test[input_vars])
-
-            offset = self.dataset_args.get("offset", 0)
-            if offset:
-                if self.val:
-                    self.df_val = pd.concat([self.df_train.iloc[-offset:], self.df_val])
-                    self.df_test = pd.concat([self.df_val.iloc[-offset:], self.df_test])
-                else:
-                    self.df_test = pd.concat([self.df_train.iloc[-offset:], self.df_test])
-
-            self.train_dataset = self.dataset(self.df_train, **self.dataset_args)
-            self.val_dataset = self.dataset(self.df_val, **self.dataset_args) if self.val else None
-            self.test_dataset = self.dataset(self.df_test, **self.dataset_args)
-            
-        if stage == 'predict':
-            if self.df_predict is None:
-                raise ValueError("df_predict must be provided when stage is predict")
-            self.predict_dataset = self.dataset(self.df_predict, **self.dataset_args)
-
-    def train_dataloader(self):
-        return DataLoader(self.train_dataset, shuffle=False, **self.data_loader_args)
-
-    def val_dataloader(self):
-        return DataLoader(self.val_dataset, shuffle=False, **self.data_loader_args)
-
-    def test_dataloader(self):
-        return DataLoader(self.test_dataset, shuffle=False, **self.data_loader_args)
-
-    def predict_dataloader(self):
-        return DataLoader(self.predict_dataset, shuffle=False, **self.data_loader_args)
-
-class timeSeriesTrainValDataModule(pl.LightningDataModule):
-    def __init__(
-        self, 
-        df: pd.DataFrame,
-        dataset: Dataset,
-        df_predict: Optional[pd.DataFrame] = None,
-        split_ratio: List = [0.8, 0.2], 
-        batch_size: int = 32,
-        scale_mode: str = "standard",
-        **dataset_args
-    ):
-        super().__init__()
-        self.df = df
-        self.dataset = dataset
-        self.df_predict = df_predict
-        self.split_ratio = split_ratio
-        self.dataset_args = dataset_args
-        self.scale_mode = scale_mode
-        self.data_loader_args = {
-            "batch_size": batch_size,
-            "num_workers": os.cpu_count(),
-            "pin_memory": True
-        }
-    
-    def setup(self, stage: str):
-        if stage == 'fit' or stage == 'test' or stage is None:
-            self.df_train, _, self.df_val = split_data(self.df.copy(), mode="ratio", val=False, value=self.split_ratio)
-
-            input_vars = self.dataset_args["input_vars"]
-            self.scaler = StandardScaler() if self.scale_mode == "standard" else MinMaxScaler()
-            self.scaler.fit(self.df_train[input_vars])
-            self.df_train[input_vars] = self.scaler.transform(self.df_train[input_vars])
-            self.df_val[input_vars] = self.scaler.transform(self.df_val[input_vars])
-
-            offset = self.dataset_args.get("offset", 0)
-            if offset:
-                self.df_val = pd.concat([self.df_train.iloc[-offset:], self.df_val])
-
-            self.train_dataset = self.dataset(self.df_train, **self.dataset_args)
-            self.val_dataset = self.dataset(self.df_val, **self.dataset_args)
-            
-        if stage == 'predict':
-            if self.df_predict is None:
-                raise ValueError("df_predict must be provided when stage is predict")
-            self.predict_dataset = self.dataset(self.df_predict, **self.dataset_args)
-
-    def train_dataloader(self):
-        return DataLoader(self.train_dataset, shuffle=False, **self.data_loader_args)
-
-    def val_dataloader(self):
-        return DataLoader(self.val_dataset, shuffle=False, **self.data_loader_args)
-
-    # def test_dataloader(self):
-    #     return DataLoader(self.test_dataset, shuffle=False, **self.data_loader_args)
-
-    def predict_dataloader(self):
-        return DataLoader(self.predict_dataset, shuffle=False, **self.data_loader_args)
+    def __len__(self):
+        return len(self.data) - self.seq_len
 
 class seq2seqDataset(Dataset):
     def __init__(
@@ -377,40 +268,40 @@ def split_train_test(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.T
 
     return df_train, df_test, last_date
 
-def split_data(df: pd.DataFrame, mode: str, val: bool, value: List[Union[int, float, str]]) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    # Check val and value list
-    if val:
-        assert len(value) == 3, "Length of value list should be 3 for train, validation and test set."
-        train_value, val_value, test_value = value
-    else:
-        assert len(value) == 2, "Length of value list should be 2 for train and test set."
-        train_value, test_value = value
-        val_value = None
+# def split_data(df: pd.DataFrame, mode: str, val: bool, value: List[Union[int, float, str]]) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+#     # Check val and value list
+#     if val:
+#         assert len(value) == 3, "Length of value list should be 3 for train, validation and test set."
+#         train_value, val_value, test_value = value
+#     else:
+#         assert len(value) == 2, "Length of value list should be 2 for train and test set."
+#         train_value, test_value = value
+#         val_value = None
 
-    # Process according to mode
-    if mode == "ratio":
-        assert math.isclose(sum(value), 1), "Sum of ratios should be 1."
-        train_ratio = train_value
-        val_ratio = val_value if val_value else 0
-        test_ratio = test_value
+#     # Process according to mode
+#     if mode == "ratio":
+#         assert math.isclose(sum(value), 1), "Sum of ratios should be 1."
+#         train_ratio = train_value
+#         val_ratio = val_value if val_value else 0
+#         test_ratio = test_value
 
-    elif mode == "size":
-        train_ratio = train_value / len(df)
-        val_ratio = val_value / len(df) if val_value else 0
-        test_ratio = test_value / len(df)
+#     elif mode == "size":
+#         train_ratio = train_value / len(df)
+#         val_ratio = val_value / len(df) if val_value else 0
+#         test_ratio = test_value / len(df)
 
-    elif mode == "date":
-        train_date, val_date, test_date = pd.to_datetime([train_value, val_value, test_value])
-        train_ratio = len(df[df['date'] <= train_date]) / len(df)
-        val_ratio = len(df[(df['date'] > train_date) & (df['date'] <= val_date)]) / len(df) if val_date else 0
-        test_ratio = len(df[df['date'] > test_date]) / len(df)
+#     elif mode == "date":
+#         train_date, val_date, test_date = pd.to_datetime([train_value, val_value, test_value])
+#         train_ratio = len(df[df['date'] <= train_date]) / len(df)
+#         val_ratio = len(df[(df['date'] > train_date) & (df['date'] <= val_date)]) / len(df) if val_date else 0
+#         test_ratio = len(df[df['date'] > test_date]) / len(df)
 
-    # Split the dataframe
-    train_index = int(len(df) * train_ratio)
-    val_index = train_index + int(len(df) * val_ratio)
+#     # Split the dataframe
+#     train_index = int(len(df) * train_ratio)
+#     val_index = train_index + int(len(df) * val_ratio)
 
-    df_train = df[:train_index]
-    df_val = df[train_index:val_index] if val else None
-    df_test = df[val_index:]
+#     df_train = df[:train_index]
+#     df_val = df[train_index:val_index] if val else None
+#     df_test = df[val_index:]
 
-    return df_train, df_val, df_test
+#     return df_train, df_val, df_test

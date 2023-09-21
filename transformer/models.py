@@ -137,8 +137,10 @@ class InformerPL(pl.LightningModule):
         dec_inp = torch.cat([y[:, -self.label_len:, :], dec_inp], dim=1)
 
         preds = self(x, x_stamp, dec_inp, y_stamp)
-        preds = preds[:, -self.pred_len:, self.target_idx]
-        trues = y[:, -self.pred_len:, self.target_idx]
+        # preds = preds[:, -self.pred_len:, self.target_idx]
+        # trues = y[:, -self.pred_len:, self.target_idx]
+        preds = preds[:, -self.pred_len:, :]
+        trues = y[:, -self.pred_len:, :]
         return preds, trues
     
     def compute_loss(self, batch):

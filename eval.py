@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch import nn
 from datetime import datetime
-from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
 from typing import List, Dict, Tuple, Union, Any, Optional
 import matplotlib.pyplot as plt
 from .dataset import InformerDataset
@@ -34,21 +34,21 @@ def save_prediction_performance(
             else:
                 f.write(f'{item_code_name} {kind_code_name} {child_code_name} {unit} {grade} {error_rate} {rmse} {mape} {shreshold}\n')
 
-def error_report(real: Union[List, np.ndarray], pred: Union[List, np.ndarray]) -> Tuple[float, float, float, float]:
-    # naive error rate
-    error_rate = np.abs(real - pred) / real
-    error_rate = np.mean(error_rate)
-
+def error_report(ground_truth: Union[List, np.ndarray], predictions: Union[List, np.ndarray]) -> Dict[str, float]:
     # rmse
-    rmse = mean_squared_error(real, pred, squared=False)
+    rmse = mean_squared_error(ground_truth, predictions, squared=False)
 
     # mape
-    mape = mean_absolute_percentage_error(real, pred)
+    mape = mean_absolute_percentage_error(ground_truth, predictions)
 
-    # rmse shreshold
-    shreshold = np.mean(real) * 0.1
+    # r2
+    r2 = r2_score(ground_truth, predictions)
 
-    return error_rate, rmse, mape, shreshold
+    return {
+        'RMSE': rmse,
+        'MAPE': mape,
+        'R2': r2,
+    }
 
 def eval_informer(
     test_dataset: InformerDataset,
