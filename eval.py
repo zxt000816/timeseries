@@ -7,7 +7,7 @@ from datetime import datetime
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
 from typing import List, Dict, Tuple, Union, Any, Optional
 import matplotlib.pyplot as plt
-from .dataset import InformerDataset
+from timeseries.dataset import InformerDataset
 
 def save_prediction_performance(
         prediction_result_eval_path: str, 

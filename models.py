@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn.functional import mse_loss
 from torch.autograd import Variable
 import numpy as np
-from .danets.abstract_model import DANsModel
+from timeseries.danets.abstract_model import DANsModel
 
 class RNN(nn.Module):
     def __init__(self, input_dim, hidden_dim, layer_dim, output_dim, dropout_prob):
