@@ -4,13 +4,13 @@ import pytorch_lightning as pl
 import numpy as np
 import os, json, math
 from termcolor import colored
-from .db import MYSQL_DB_API
+from timeseries.db import MYSQL_DB_API
 import pandas as pd
 from typing import List, Dict, Tuple, Union, Any, Optional
-from .utils import resample_price
+from timeseries.utils import resample_price
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-class LSTMDataset(Dataset):
+class RNNDataset(Dataset):
     def __init__(
         self, data, seq_len
     ):
@@ -267,41 +267,3 @@ def split_train_test(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.T
     df_test = df[df['date'] > last_date]
 
     return df_train, df_test, last_date
-
-# def split_data(df: pd.DataFrame, mode: str, val: bool, value: List[Union[int, float, str]]) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-#     # Check val and value list
-#     if val:
-#         assert len(value) == 3, "Length of value list should be 3 for train, validation and test set."
-#         train_value, val_value, test_value = value
-#     else:
-#         assert len(value) == 2, "Length of value list should be 2 for train and test set."
-#         train_value, test_value = value
-#         val_value = None
-
-#     # Process according to mode
-#     if mode == "ratio":
-#         assert math.isclose(sum(value), 1), "Sum of ratios should be 1."
-#         train_ratio = train_value
-#         val_ratio = val_value if val_value else 0
-#         test_ratio = test_value
-
-#     elif mode == "size":
-#         train_ratio = train_value / len(df)
-#         val_ratio = val_value / len(df) if val_value else 0
-#         test_ratio = test_value / len(df)
-
-#     elif mode == "date":
-#         train_date, val_date, test_date = pd.to_datetime([train_value, val_value, test_value])
-#         train_ratio = len(df[df['date'] <= train_date]) / len(df)
-#         val_ratio = len(df[(df['date'] > train_date) & (df['date'] <= val_date)]) / len(df) if val_date else 0
-#         test_ratio = len(df[df['date'] > test_date]) / len(df)
-
-#     # Split the dataframe
-#     train_index = int(len(df) * train_ratio)
-#     val_index = train_index + int(len(df) * val_ratio)
-
-#     df_train = df[:train_index]
-#     df_val = df[train_index:val_index] if val else None
-#     df_test = df[val_index:]
-
-#     return df_train, df_val, df_test

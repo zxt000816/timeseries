@@ -4,7 +4,7 @@ import numpy as np
 from typing import List, Dict, Tuple, Union, Any, Optional
 import pytorch_lightning as pl
 from optuna.integration import PyTorchLightningPruningCallback
-from .models import InformerPL
+from timeseries.transformer.models import InformerPL
 
 def informerPL_Optimizer(
     trial: optuna.Trial,

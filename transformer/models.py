@@ -3,13 +3,12 @@ from torch import nn
 from torch.optim import Adam
 import pytorch_lightning as pl
 
-from .informer.decoder import Decoder as InformerDecoder
-from .informer.encoder import Encoder as InformerEncoder
+from timeseries.transformer.informer.decoder import Decoder as InformerDecoder
+from timeseries.transformer.informer.encoder import Encoder as InformerEncoder
 
-from .seq2seq_lstm.encoder import Encoder as Seq2SeqEncoder
-# from .seq2seq_lstm.decoder import Decoder as Seq2SeqDecoder
-from .seq2seq_lstm.attention import Attention
-from .seq2seq_lstm.attention_decoder import AttentionDecoder
+from timeseries.transformer.seq2seq_lstm.encoder import Encoder as Seq2SeqEncoder
+from timeseries.transformer.seq2seq_lstm.attention import Attention
+from timeseries.transformer.seq2seq_lstm.attention_decoder import AttentionDecoder
 
 from typing import List, Dict, Tuple, Union, Any, Optional
 import pandas as pd
@@ -285,4 +284,3 @@ class Seq2Seq(pl.LightningModule):
     def predict_step(self, batch, batch_idx):
         preds, trues = self.process_batch(batch)
         return preds[::self.output_length], trues[::self.output_length]
-    

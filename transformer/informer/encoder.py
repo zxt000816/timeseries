@@ -2,10 +2,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from .attention import ProbAttention
-
-from .embed import DataEmbedding
-
+from timeseries.transformer.informer.attention import ProbAttention
+from timeseries.transformer.informer.embed import DataEmbedding
 
 class ConvLayer(nn.Module):
     def __init__(self, c_in):
