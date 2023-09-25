@@ -60,6 +60,7 @@ class DANsModel(BaseEstimator):
         self,
         X_train,
         y_train,
+        best_model_path,
         eval_set=None,
         eval_name=None,
         eval_metric=None,
@@ -115,7 +116,7 @@ class DANsModel(BaseEstimator):
         self.virtual_batch_size = virtual_batch_size
         self.input_dim = X_train.shape[1]
         self._stop_training = False
-        self.log = Train_Log(logname, resume_dir) if (logname or resume_dir) else None
+        self.log = Train_Log(logname, best_model_path, resume_dir) if (logname or resume_dir) else None
         self.n_gpu = n_gpu
         eval_set = eval_set if eval_set else []
 
@@ -134,7 +135,6 @@ class DANsModel(BaseEstimator):
 
         if resume_dir:
             start_epoch, self.network, self._optimizer, best_value, best_epoch = self.log.load_checkpoint(self._optimizer)
-
 
         # Call method on_train_begin for all callbacks
         self._callback_container.on_train_begin()

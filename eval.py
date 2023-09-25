@@ -67,7 +67,6 @@ def save_plot_img(
     else:
         plt.plot(real, label="real")
         plt.plot(pred, label="predict")
-        
     
     plt.xticks(rotation=90)
     plt.legend()
