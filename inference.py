@@ -20,7 +20,7 @@ def auto_regression(model, X_test, y_test, forecast_horizon):
     predictions = np.concatenate(predictions)
     return predictions
 
-def auto_regression_lstm(model, testset, forecast_horizon, device):
+def auto_regression_rnn(model, testset, forecast_horizon, device):
     y_test = [testset[i][1].numpy() for i in range(len(testset))]
     predictions = []
     for i in range(0, len(testset), forecast_horizon):
