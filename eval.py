@@ -57,6 +57,7 @@ def timeseries_plot(
     x_axis: pd.Series,
     freq: str,
     figsize: Tuple=(10, 6),
+    title: Optional[str]=None,
     angle: int=45,
     interval: Optional[int]=None,
     axvline: Optional[pd.Timestamp]=None,
@@ -90,15 +91,16 @@ def timeseries_plot(
         x_axis.max()+x_axis_offset
     )
     plt.grid()
+
+    if title is not None:
+        plt.title(title)
     if axvline is not None:
         plt.axvline(x=axvline, color='r', linestyle='--', label='train-test split')
-
     if save_path is not None:
         if not os.path.exists(save_path):
             plt.savefig(save_path)
         else:
             print(f'{save_path} already exists')
-    
     if show is True:
         plt.show()
 
