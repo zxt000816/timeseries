@@ -1,13 +1,9 @@
 import pandas as pd
 import numpy as np
 import os
-# from torch.utils.data import DataLoader
-# from torch import nn
-# from datetime import datetime
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
 from typing import List, Dict, Tuple, Union, Any, Optional
 import matplotlib.pyplot as plt
-# from timeseries.dataset import InformerDataset
 import matplotlib.dates as mdates
 
 def save_prediction_performance(
@@ -77,9 +73,10 @@ def timeseries_plot(
         x_axis_locator = mdates.DayLocator(interval=interval)
         x_axis_offset = pd.DateOffset(days=1)
 
+    plt.style.use('default')
     plt.figure(figsize=figsize)
-    plt.plot(x_axis, ground_truth, label="ground-truth", marker='o')
-    plt.plot(x_axis, predictions, label="predictions", marker='o')
+    plt.plot(x_axis, ground_truth, label="ground-truth")
+    plt.plot(x_axis, predictions, label="predictions")
     plt.xticks(rotation=angle)
     plt.legend()
 
@@ -105,31 +102,3 @@ def timeseries_plot(
         plt.show()
 
     plt.close()
-
-    
-
-# def save_plot_img(
-#     img_save_path: str, 
-#     pred: Union[List, np.ndarray], 
-#     real: Union[List, np.ndarray], 
-#     mape: float, 
-#     rmse: float, 
-#     shreshold: float,
-#     x_axis: Union[List, np.ndarray] = [], 
-#     show: bool = False
-# ) -> None:
-#     plt.figure(figsize=(18, 6))
-#     if len(x_axis) > 0: 
-#         plt.plot(x_axis, real, label="real")
-#         plt.plot(x_axis, pred, label="predict")
-#     else:
-#         plt.plot(real, label="real")
-#         plt.plot(pred, label="predict")
-    
-#     plt.xticks(rotation=90)
-#     plt.legend()
-#     plt.title(f'MAPE: {mape*100:.2f}%  RMSE / Shreshold: {rmse:.2f} / {shreshold:.2f}')
-#     plt.savefig(img_save_path)
-#     if show:
-#         plt.show()
-#     plt.close()
