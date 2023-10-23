@@ -10,8 +10,8 @@ def informerPL_Optimizer(
     trial: optuna.Trial,
     informer_optimize_args: Dict[str, Any],
     train_dataloader: DataLoader,
-    device: torch.device,
     val_dataloader: Optional[DataLoader] = None,
+    max_epochs: int = 100
 ):
     d_k = trial.suggest_categorical('d_k', [8, 16, 32])
     d_v = d_k
@@ -27,7 +27,7 @@ def informerPL_Optimizer(
     target_loss = "train_loss" if val_dataloader is None else "val_loss"
 
     trainer = pl.Trainer(
-        max_epochs=20,
+        max_epochs=max_epochs,
         callbacks=[PyTorchLightningPruningCallback(trial, monitor=target_loss)],
         enable_model_summary=False,
         enable_checkpointing=False
@@ -70,9 +70,9 @@ def optimize_informerPL(
     num_of_trials: int,
     informer_optimize_args: Dict[str, Any],
     train_dataloader: DataLoader,
-    device: torch.device,
     best_params_path: str,
     val_dataloader: Optional[DataLoader] = None,
+    max_epochs: Optional[int] = 100
 ) -> Dict[str, Any]:
     if os.path.exists(best_params_path):
         print(f'Loading best params from: {best_params_path}')
@@ -82,7 +82,13 @@ def optimize_informerPL(
         print(f'Optimizing hyperparameters for {num_of_trials} trials...')
         study = optuna.create_study(direction="minimize")
         def objective(trial):
-            loss = informerPL_Optimizer(trial, informer_optimize_args, train_dataloader, device, val_dataloader)
+            loss = informerPL_Optimizer(
+                trial, 
+                informer_optimize_args, 
+                train_dataloader, 
+                val_dataloader, 
+                max_epochs
+            )
             return loss
         study.optimize(objective, n_trials=num_of_trials)
         best_params = study.best_params
