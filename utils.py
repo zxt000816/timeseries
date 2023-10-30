@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import pandas as pd
 from termcolor import colored
@@ -5,13 +6,15 @@ from datetime import datetime
 from typing import List, Dict, Tuple, Union, Any, Optional
 import os, random, torch
 from pandas.tseries.offsets import BDay
+import pytorch_lightning as pl
 
-def seed_everything(seed: int = 42):
+def seed_everything(seed: int = 123):
     random.seed(seed)
     np.random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)  # type: ignore
+    
     torch.backends.cudnn.deterministic = True  # type: ignore
     torch.backends.cudnn.benchmark = True  # type: ignore
 

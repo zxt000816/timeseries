@@ -4,6 +4,7 @@ import numpy as np
 from typing import List, Dict, Tuple, Union, Any, Optional
 import pytorch_lightning as pl
 from optuna.integration import PyTorchLightningPruningCallback
+from optuna.samplers import TPESampler
 from timeseries.transformer.models import InformerPL
 
 def informerPL_Optimizer(
@@ -71,8 +72,9 @@ def optimize_informerPL(
     informer_optimize_args: Dict[str, Any],
     train_dataloader: DataLoader,
     best_params_path: str,
+    seed: int,
     val_dataloader: Optional[DataLoader] = None,
-    max_epochs: Optional[int] = 100
+    max_epochs: Optional[int] = 100,
 ) -> Dict[str, Any]:
     if os.path.exists(best_params_path):
         print(f'Loading best params from: {best_params_path}')
@@ -80,7 +82,8 @@ def optimize_informerPL(
             best_params = json.load(f)
     else:
         print(f'Optimizing hyperparameters for {num_of_trials} trials...')
-        study = optuna.create_study(direction="minimize")
+        study = optuna.create_study(direction="minimize", sampler=TPESampler(seed=seed))
+        # study = optuna.create_study(direction="minimize")
         def objective(trial):
             loss = informerPL_Optimizer(
                 trial, 
@@ -93,5 +96,5 @@ def optimize_informerPL(
         study.optimize(objective, n_trials=num_of_trials)
         best_params = study.best_params
         with open(best_params_path, 'w') as f:
-            json.dump(best_params, f)
+            json.dump(best_params, f, ensure_ascii=False, indent=4, separators=(',', ':'))
     return best_params
