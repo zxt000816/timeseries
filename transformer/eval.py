@@ -1,11 +1,11 @@
 import torch
 import numpy as np
 
-def parse_informerPL_output(outputs, pred_len, concat_method='last_point'):
-    if concat_method not in ['last_point', 'sequence']:
-        raise ValueError("concat_method must be one of ['last_point', 'sequence']")
+def parse_informerPL_output(outputs, pred_len, parse_method='last_point'):
+    if parse_method not in ['last_point', 'sequence']:
+        raise ValueError("parse_method must be one of ['last_point', 'sequence']")
     
-    if concat_method == 'last_point':
+    if parse_method == 'last_point':
         all_preds = []
         all_trues = []
         for (__preds, __trues) in outputs:
@@ -16,7 +16,7 @@ def parse_informerPL_output(outputs, pred_len, concat_method='last_point'):
         all_trues = np.concatenate(all_trues)
         return all_preds, all_trues
 
-    if concat_method == 'sequence':
+    if parse_method == 'sequence':
         _preds = torch.Tensor([])
         _trues = torch.Tensor([])
         for (__preds, __trues) in outputs:
