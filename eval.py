@@ -31,21 +31,17 @@ def save_prediction_performance(
             else:
                 f.write(f'{item_code_name} {kind_code_name} {child_code_name} {unit} {grade} {error_rate} {rmse} {mape} {shreshold}\n')
 
-def error_report(ground_truth: Union[List, np.ndarray], predictions: Union[List, np.ndarray]) -> Dict[str, float]:
-    # rmse
+def SMAPE(ground_truth: pd.Series, predictions: pd.Series) -> float:
+    numerator = abs(ground_truth - predictions)
+    denominator = (abs(ground_truth) + abs(predictions)) / 2
+    return (numerator / denominator).mean()
+
+def error_report(ground_truth: pd.Series, predictions: pd.Series) -> Dict[str, float]:
     rmse = mean_squared_error(ground_truth, predictions, squared=False)
-
-    # mape
     mape = mean_absolute_percentage_error(ground_truth, predictions)
-
-    # r2
+    smape = SMAPE(ground_truth, predictions)
     r2 = r2_score(ground_truth, predictions)
-
-    return {
-        'RMSE': float(rmse),
-        'MAPE': float(mape),
-        'R2': float(r2),
-    }
+    return { 'RMSE': float(rmse), 'MAPE': float(mape), 'R2': float(r2), 'SMAPE': float(smape) }
 
 def timeseries_plot(
     ground_truth: Union[np.ndarray, List],
@@ -68,7 +64,11 @@ def timeseries_plot(
         x_axis_format = '%Y-%m'
         x_axis_locator = mdates.MonthLocator(interval=interval)
         x_axis_offset = pd.DateOffset(months=1)
-    else:
+    elif freq == 'D':
+        x_axis_format = '%Y-%m-%d'
+        x_axis_locator = mdates.DayLocator(interval=interval)
+        x_axis_offset = pd.DateOffset(days=1)
+    elif freq == 'W':
         x_axis_format = '%Y-%m-%d'
         x_axis_locator = mdates.DayLocator(interval=interval)
         x_axis_offset = pd.DateOffset(days=1)
