@@ -41,7 +41,12 @@ def error_report(ground_truth: pd.Series, predictions: pd.Series) -> Dict[str, f
     mape = mean_absolute_percentage_error(ground_truth, predictions)
     smape = SMAPE(ground_truth, predictions)
     r2 = r2_score(ground_truth, predictions)
-    return { 'RMSE': float(rmse), 'MAPE': float(mape), 'R2': float(r2), 'SMAPE': float(smape) }
+    return {
+        'RMSE': round(float(rmse), 3),
+        'MAPE': round(float(mape), 3),
+        'SMAPE': round(float(smape), 3),
+        'R2': round(float(r2), 3),
+    }
 
 def timeseries_plot(
     ground_truth: Union[np.ndarray, List],
@@ -60,7 +65,7 @@ def timeseries_plot(
         interval= int(ground_truth.shape[0] / 20)
     
     x_axis_locator, x_axis_offset = None, None
-    if freq == 'M':
+    if freq == 'M' or freq == 'MS':
         x_axis_format = '%Y-%m'
         x_axis_locator = mdates.MonthLocator(interval=interval)
         x_axis_offset = pd.DateOffset(months=1)
