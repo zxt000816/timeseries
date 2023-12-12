@@ -38,7 +38,8 @@ def create_time_embedding(df: pd.DataFrame, features: List[str]) -> pd.DataFrame
 
     for feature in features:
         if feature in feature_funcs:
-            df[feature] = df["date"].apply(feature_funcs[feature], 1)
+            # df[feature] = df["date"].apply(feature_funcs[feature], 1)
+            df[feature] = df["date"].apply(feature_funcs[feature])
 
     return df
 

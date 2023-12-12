@@ -48,6 +48,12 @@ def error_report(ground_truth: pd.Series, predictions: pd.Series) -> Dict[str, f
         'R2': round(float(r2), 3),
     }
 
+def calculate_interval(length: int, num_of_samples: int=20) -> int:
+    interval = int(length / num_of_samples)
+    if interval == 0:
+        interval = 10
+    return interval
+
 def timeseries_plot(
     ground_truth: Union[np.ndarray, List],
     predictions: Union[np.ndarray, List],
@@ -62,7 +68,8 @@ def timeseries_plot(
     show: bool=True,
 ):
     if interval is None:
-        interval= int(ground_truth.shape[0] / 20)
+        # interval= int(ground_truth.shape[0] / 20)
+        interval = calculate_interval(ground_truth.shape[0], 20)
     
     x_axis_locator, x_axis_offset = None, None
     if freq == 'M' or freq == 'MS':
@@ -76,7 +83,12 @@ def timeseries_plot(
     elif freq == 'W':
         x_axis_format = '%Y-%m-%d'
         x_axis_locator = mdates.DayLocator(interval=interval)
-        x_axis_offset = pd.DateOffset(days=1)
+        # x_axis_locator = mdates.WeekdayLocator(byweekday=mdates.MO, interval=interval)
+        x_axis_offset = pd.DateOffset(days=7)
+    elif freq == 'Q':
+        x_axis_format = '%Y-%m-%d'
+        x_axis_locator = mdates.MonthLocator(interval=interval)
+        x_axis_offset = pd.DateOffset(months=1)
 
     plt.style.use('default')
     plt.figure(figsize=figsize)
