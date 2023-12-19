@@ -8,15 +8,28 @@ import os, random, torch
 from pandas.tseries.offsets import BDay
 import pytorch_lightning as pl
 
+# def seed_everything(seed: int = 123):
+#     random.seed(seed)
+#     np.random.seed(seed)
+#     os.environ["PYTHONHASHSEED"] = str(seed)
+#     torch.manual_seed(seed)
+#     torch.cuda.manual_seed(seed)  # type: ignore
+    
+#     torch.backends.cudnn.deterministic = True  # type: ignore
+#     torch.backends.cudnn.benchmark = True  # type: ignore
+
 def seed_everything(seed: int = 123):
+    os.environ["PYTHONHASHSEED"] = str(seed)
+
     random.seed(seed)
     np.random.seed(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)  # type: ignore
     
-    torch.backends.cudnn.deterministic = True  # type: ignore
-    torch.backends.cudnn.benchmark = True  # type: ignore
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    
+    torch.backends.cudnn.deterministic = True 
+    torch.backends.cudnn.benchmark = False # 이 설정을 켜 놓으면 성능 향상에 도움이 된다고 한다. 그러나 연산 후 값이 달라질 수 있는 것이다. https://tempdev.tistory.com/28
 
 def determine_period(freq: str) -> int:
     if freq == 'D':
@@ -92,3 +105,26 @@ def create_folder(*args: List[str]) -> None:
         if not os.path.exists(arg):
             os.makedirs(arg)
             print(colored(f"Create folder: {arg}", "green"))
+
+def convert_to_datetime(x):
+    formats = [
+        '%Y-%m-%d',
+        '%Y%m%d',
+        '%Y/%m/%d',
+        '%Y.%m.%d',
+        '%Y-%m',
+        '%Y%m',
+    ]
+    for format in formats:
+        try:
+            if isinstance(x, str):
+                return datetime.strptime(x, format)
+            elif isinstance(x, datetime):
+                return x
+            elif isinstance(x, int):
+                return datetime.strptime(str(x), format)
+            
+        except Exception as e:
+            continue
+
+    raise ValueError(f"Cannot convert {x} to datetime.")
