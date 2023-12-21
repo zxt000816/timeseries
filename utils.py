@@ -8,16 +8,6 @@ import os, random, torch
 from pandas.tseries.offsets import BDay
 import pytorch_lightning as pl
 
-# def seed_everything(seed: int = 123):
-#     random.seed(seed)
-#     np.random.seed(seed)
-#     os.environ["PYTHONHASHSEED"] = str(seed)
-#     torch.manual_seed(seed)
-#     torch.cuda.manual_seed(seed)  # type: ignore
-    
-#     torch.backends.cudnn.deterministic = True  # type: ignore
-#     torch.backends.cudnn.benchmark = True  # type: ignore
-
 def seed_everything(seed: int = 123):
     os.environ["PYTHONHASHSEED"] = str(seed)
 
@@ -106,25 +96,24 @@ def create_folder(*args: List[str]) -> None:
             os.makedirs(arg)
             print(colored(f"Create folder: {arg}", "green"))
 
-def convert_to_datetime(x):
-    formats = [
-        '%Y-%m-%d',
-        '%Y%m%d',
-        '%Y/%m/%d',
-        '%Y.%m.%d',
-        '%Y-%m',
-        '%Y%m',
-    ]
-    for format in formats:
-        try:
-            if isinstance(x, str):
-                return datetime.strptime(x, format)
-            elif isinstance(x, datetime):
-                return x
-            elif isinstance(x, int):
-                return datetime.strptime(str(x), format)
-            
-        except Exception as e:
-            continue
+def convert_date_str_to_datetime(date_series: pd.Series, freq: str):
+    if freq in ['M']:
+        date_formats = ['%Y%m', '%Y%m%d', '%Y-%m-%d']
+    elif freq in ['D', 'W']:
+        date_formats = ['%Y-%m-%d', '%Y%m%d', '%Y.%m.%d']
+    elif freq in ['Q']:
+        date_formats = ['%Y-%m-%d', '%Y%m%d', '%Y.%m.%d', '%Y-%m', '%Y%m']
 
-    raise ValueError(f"Cannot convert {x} to datetime.")
+    for i, date_format in enumerate(date_formats):
+        try:
+            date_series = date_series.astype(str)
+            date_series = pd.to_datetime(date_series, format=date_format)
+            print(f"matched with {date_format}")
+            break
+        except ValueError as e:
+            print(f'{date_format} is not matched with the data, will try other formats.')
+
+        if i == len(date_formats) - 1:
+            raise ValueError(f"the date format of the data is not supported.")
+
+    return date_series   
