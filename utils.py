@@ -108,6 +108,7 @@ def convert_date_str_to_datetime(date_series: pd.Series, freq: str):
         try:
             date_series = date_series.astype(str)
             date_series = pd.to_datetime(date_series, format=date_format)
+            date_series = date_series + pd.offsets.MonthEnd(0)
             print(f"matched with {date_format}")
             break
         except ValueError as e:
